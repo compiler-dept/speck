@@ -1,8 +1,8 @@
-#include "../cspeck.h"
+#include <stdio.h>
+#include "../speck.h"
 
 void spec_example__sample_one(void)
 {
-    int i = 0;
-
-    cs_assert(i == 0);
+    puts("Hello, I'm a shared library.");
+    sp_assert(42);
 }

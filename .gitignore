@@ -1,0 +1,3 @@
+speck
+spec/*.so
+spec/*.o

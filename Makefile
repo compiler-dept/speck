@@ -1,9 +1,23 @@
-BIN=cspeck
+BIN=speck
 CFLAGS=-Wall -g
+LDLIBS=-ldl
+
+TESTS=spec/example.so
 
 .PHONY: all test clean
 
-all: $(BIN)	
+all: $(BIN)
+
+spec/%.o: spec/%.c
+	$(CC) $(CFLAGS) -fpic -c -o $@ $^
+
+spec/%.so: spec/%.o
+	$(CC) $(CFLAGS) --shared -o $@ $^
+
+test: $(BIN) $(TESTS)
+	./speck
 
 clean:
-	rm -f cspeck
+	rm -f speck
+	rm -f spec/*.o
+	rm -f spec/*.so
