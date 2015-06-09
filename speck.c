@@ -2,12 +2,11 @@
 #include <stdio.h>
 #include <dlfcn.h>
 
+void (*register_sp_assert)(void(*)(int));
 void sp_assert(int exp)
 {
     puts("ASSERT");
 }
-
-void (*register_sp_assert)(void(*)(int));
 
 int main(int argc, char **argv)
 {

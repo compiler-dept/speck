@@ -1,10 +1,10 @@
 BIN=speck
-CFLAGS=-Wall -g
+CFLAGS=-Wall -g -std=c11
 LDLIBS=-ldl
 
 TESTS=spec/example.so
 
-.PHONY: all test clean
+.PHONY: all test valgrind clean
 
 all: $(BIN)
 
@@ -16,6 +16,12 @@ spec/%.so: spec/%.o
 
 test: $(BIN) $(TESTS)
 	./speck
+
+valgrind: test
+	valgrind --leak-check=full --error-exitcode=1 ./speck
+
+style:
+	astyle -A3s4SpHk3jn "*.c" "*.h" "spec/*.c"
 
 clean:
 	rm -f speck
