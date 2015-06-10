@@ -11,12 +11,16 @@ void sp_assert(int exp)
 int main(int argc, char **argv)
 {
     void *lib = dlopen("spec/example.so", RTLD_LAZY);
+    void *lib2 = dlopen("spec/example2.so", RTLD_LAZY);
 
     register_sp_assert = dlsym(lib, "register_sp_assert");
     register_sp_assert(sp_assert);
+    register_sp_assert = dlsym(lib2, "register_sp_assert");
+    register_sp_assert(sp_assert);
 
     void (*fun)(void) = dlsym(lib, "spec_example__sample_one");
-
+    fun();
+    fun = dlsym(lib2, "spec_example2__sample_one");
     fun();
 
     dlclose(lib);

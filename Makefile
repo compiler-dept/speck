@@ -2,7 +2,7 @@ BIN=speck
 CFLAGS=-Wall -g -std=c11
 LDLIBS=-ldl
 
-TESTS=spec/example.so
+TESTS=spec/example.so spec/example2.so
 
 .PHONY: all test valgrind clean
 
