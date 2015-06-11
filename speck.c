@@ -4,6 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <sys/wait.h>
 
 /* Data structures */
 
@@ -14,6 +15,17 @@ struct suite {
     void *handle;
     char **tests;
 };
+
+/* Helper functions */
+
+char *string_dup(const char *str)
+{
+    size_t len = strlen(str) + 1;
+    char *new_str = malloc(len * sizeof(char));
+    memcpy(new_str, str, len);
+
+    return new_str;
+}
 
 /* Assertions */
 
@@ -44,11 +56,11 @@ void get_tests(struct suite *suite)
 {
     if (strcmp(suite->so_file, "spec/example.so") == 0) {
         suite->tests = malloc(2 * sizeof(char *));
-        suite->tests[0] = strdup("spec_example__sample_one");
+        suite->tests[0] = string_dup("spec_example__sample_one");
         suite->tests[1] = NULL;
     } else if (strcmp(suite->so_file, "spec/example2.so") == 0) {
         suite->tests = malloc(2 * sizeof(char *));
-        suite->tests[0] = strdup("spec_example2__sample_one");
+        suite->tests[0] = string_dup("spec_example2__sample_one");
         suite->tests[1] = NULL;
     }
 }
