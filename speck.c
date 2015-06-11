@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <dlfcn.h>
 #include <string.h>
+#include <unistd.h>
 
 /* Data structures */
 
@@ -82,6 +83,15 @@ void run_tests(struct suite *suite) {
         test = dlsym(suite->handle, suite->tests[i]);
         test();
     }
+}
+
+/* Compilation */
+
+const char *compiler = "clang";
+
+void compile_suite()
+{
+
 }
 
 /* Main */
