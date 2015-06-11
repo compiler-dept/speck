@@ -6,6 +6,7 @@
 #include <dirent.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <stdarg.h>
 
 /* Data structures */
 
@@ -23,9 +24,29 @@ char *string_dup(const char *str)
 {
     size_t len = strlen(str) + 1;
     char *new_str = malloc(len * sizeof(char));
-    memcpy(new_str, str, len);
+    if (new_str) {
+        memcpy(new_str, str, len);
+    }
 
     return new_str;
+}
+
+int alloc_sprintf(char **str, const char *format, ...)
+{
+    const int start_size = 8;
+    *str = malloc(start_size * sizeof(char));
+    va_list ap, ap_copy;
+    va_start(ap, format);
+    va_copy(ap_copy, ap);
+    int size = vsnprintf(*str, start_size, format, ap);
+    va_end(ap);
+    if (size > start_size - 1) {
+        *str = realloc(*str, (size + 1) * sizeof(char));
+        vsnprintf(*str, size + 1, format, ap_copy);
+        va_end(ap_copy);
+    }
+
+    return size;
 }
 
 /* Assertions */
@@ -106,8 +127,8 @@ struct suite **get_suites(void)
             memcpy(base_name, entry->d_name, len);
             base_name[len] = '\0';
 
-            asprintf(&(suites[count - 1]->c_file), "%s/%s.c", spec_dir, base_name);
-            asprintf(&(suites[count - 1]->so_file), "%s/%s.so", spec_dir, base_name);
+            alloc_sprintf(&(suites[count - 1]->c_file), "%s/%s.c", spec_dir, base_name);
+            alloc_sprintf(&(suites[count - 1]->so_file), "%s/%s.so", spec_dir, base_name);
             suites[count - 1]->name = base_name;
         }
     }
