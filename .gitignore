@@ -1,3 +1,5 @@
 speck
+speck.dSYM
 spec/*.so
 spec/*.o
+spec/*.dSYM

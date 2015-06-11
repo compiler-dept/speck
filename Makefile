@@ -2,22 +2,14 @@ BIN=speck
 CFLAGS=-Wall -g -std=c11
 LDLIBS=-ldl
 
-TESTS=spec/example.so spec/example2.so
-
 .PHONY: all test valgrind clean
 
 all: $(BIN)
 
-spec/%.o: spec/%.c
-	$(CC) $(CFLAGS) -fpic -c -o $@ $^
-
-spec/%.so: spec/%.o
-	$(CC) $(CFLAGS) --shared -o $@ $^
-
-test: $(BIN) $(TESTS)
+test: $(BIN)
 	./speck
 
-valgrind: $(BIN) $(TESTS)
+valgrind: $(BIN)
 	valgrind --leak-check=full --error-exitcode=1 ./speck
 
 style:
@@ -25,5 +17,7 @@ style:
 
 clean:
 	rm -f speck
+	rm -rf speck.dSYM
 	rm -f spec/*.o
 	rm -f spec/*.so
+	rm -rf spec/*.dSYM
