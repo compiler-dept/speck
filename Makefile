@@ -17,7 +17,7 @@ spec/%.so: spec/%.o
 test: $(BIN) $(TESTS)
 	./speck
 
-valgrind: test
+valgrind: $(BIN) $(TESTS)
 	valgrind --leak-check=full --error-exitcode=1 ./speck
 
 style:

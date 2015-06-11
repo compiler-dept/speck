@@ -100,5 +100,7 @@ int main(int argc, char **argv)
         close_suite(suite[i]);
     }
 
+    free(suite);
+
     return EXIT_SUCCESS;
 }
