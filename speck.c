@@ -8,7 +8,7 @@
 struct suite {
     char *path;
     void *handle;
-    void **tests;
+    char **tests;
 };
 
 /* Assertions */
@@ -59,6 +59,8 @@ struct suite *open_suite(const char *path)
     suite->handle = dlopen(path, RTLD_LAZY);
     get_tests(suite);
 
+    register_assertions(suite->handle);
+
     return suite;
 }
 
@@ -86,17 +88,17 @@ void run_tests(struct suite *suite) {
 
 int main(int argc, char **argv)
 {
-    struct suite *suite1 = open_suite("spec/example.so");
-    struct suite *suite2 = open_suite("spec/example2.so");
+    const int suites = 2;
 
-    register_assertions(suite1->handle);
-    register_assertions(suite2->handle);
+    struct suite **suite = malloc(suites * sizeof(struct suite *));
 
-    run_tests(suite1);
-    run_tests(suite2);
+    suite[0] = open_suite("spec/example.so");
+    suite[1] = open_suite("spec/example2.so");
 
-    close_suite(suite1);
-    close_suite(suite2);
+    for (int i = 0; i < suites; i++) {
+        run_tests(suite[i]);
+        close_suite(suite[i]);
+    }
 
     return EXIT_SUCCESS;
 }
