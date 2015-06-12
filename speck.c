@@ -16,6 +16,7 @@ struct suite {
     char *so_file;
     void *handle;
     char **tests;
+    int stat_loc;
 };
 
 /* Helper functions */
@@ -149,12 +150,15 @@ void free_suites(struct suite **suites)
         free(suites[i]->name);
         free(suites[i]->c_file);
         free(suites[i]->so_file);
-        dlclose(suites[i]->handle);
 
-        for (int j = 0; suites[i]->tests[j] != NULL; j++) {
-            free(suites[i]->tests[j]);
+        if (suites[i]->stat_loc == 0) {
+            dlclose(suites[i]->handle);
+
+            for (int j = 0; suites[i]->tests[j] != NULL; j++) {
+                free(suites[i]->tests[j]);
+            }
+            free(suites[i]->tests);
         }
-        free(suites[i]->tests);
 
         free(suites[i]);
     }
@@ -166,7 +170,7 @@ void free_suites(struct suite **suites)
 
 char *compiler = "clang";
 
-void compile_suite(struct suite *suite)
+int compile_suite(struct suite *suite)
 {
     printf("Compiling %s ...", suite->name);
 
@@ -190,10 +194,15 @@ void compile_suite(struct suite *suite)
         execvp(compiler, args);
         exit(0);
     } else {
-        waitpid(pid, NULL, 0);
+        waitpid(pid, &(suite->stat_loc), 0);
+        if (suite->stat_loc == 0) {
+            printf(" DONE\n");
+            return 1;
+        } else {
+            printf(" ERROR\n");
+            return 0;
+        }
     }
-
-    printf(" DONE\n");
 }
 
 /* Main */
@@ -204,7 +213,10 @@ int main(int argc, char **argv)
 
     for (int i = 0; suites[i] != NULL; i++) {
         printf("Suite: %s\n", suites[i]->name);
-        compile_suite(suites[i]);
+        if (!compile_suite(suites[i])) {
+            continue;
+        }
+
         load_suite(suites[i]);
         run_tests(suites[i]);
     }
