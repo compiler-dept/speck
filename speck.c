@@ -168,7 +168,8 @@ char *compiler = "clang";
 
 void compile_suite(struct suite *suite)
 {
-    printf("Compiling %s ...", suite->c_file);
+    printf("Compiling %s ...", suite->name);
+
     char *args[10];
     int idx = 0;
 
