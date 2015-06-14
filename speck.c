@@ -50,6 +50,33 @@ int alloc_sprintf(char **str, const char *format, ...)
     return size;
 }
 
+char *str_match(const char text[])
+{
+    char str[] = "void spec_";
+    int len = 10;
+    size_t textlen = strlen(text);
+
+    if (textlen >= len) {
+        for (int i = 0; i < len; i++) {
+            if (str[i] != text[i]) {
+                return NULL;
+            }
+        }
+
+        int pre_offset = 5; /* "void " */
+        int post_offset = 7; /* "(void)\n" */
+
+        char *match = malloc((textlen - pre_offset - post_offset + 1) * sizeof(char));
+
+        memcpy(match, text + pre_offset, textlen - pre_offset - post_offset);
+        match[textlen - pre_offset - post_offset] = '\0';
+
+        return match;
+    }
+
+    return NULL;
+}
+
 /* Assertions */
 
 void sp_assert(int exp)
@@ -77,15 +104,26 @@ void register_assertions(void *lib)
 
 void get_tests(struct suite *suite)
 {
-    if (strcmp(suite->so_file, "spec/example.so") == 0) {
-        suite->tests = malloc(2 * sizeof(char *));
-        suite->tests[0] = string_dup("spec_example__sample_one");
-        suite->tests[1] = NULL;
-    } else if (strcmp(suite->so_file, "spec/example2.so") == 0) {
-        suite->tests = malloc(2 * sizeof(char *));
-        suite->tests[0] = string_dup("spec_example2__sample_one");
-        suite->tests[1] = NULL;
+    FILE *fp = fopen(suite->c_file, "r");
+    char *line = NULL;
+    size_t linelen = 0;
+    ssize_t len;
+    int test_count = 0;
+    while((len = getline(&line, &linelen, fp)) > 0) {
+        char *temp = str_match(line);
+        if (temp) {
+            suite->tests = realloc(suite->tests, (test_count + 1) * sizeof(char *));
+            suite->tests[test_count++] = temp;
+        }
+        free(line);
+        line = NULL;
     }
+
+    suite->tests = realloc(suite->tests, (test_count + 1) * sizeof(char *));
+    suite->tests[test_count] = NULL;
+
+    free(line);
+    fclose(fp);
 }
 
 void load_suite(struct suite *suite)
@@ -131,6 +169,8 @@ struct suite **get_suites(void)
             alloc_sprintf(&(suites[count - 1]->c_file), "%s/%s.c", spec_dir, base_name);
             alloc_sprintf(&(suites[count - 1]->so_file), "%s/%s.so", spec_dir, base_name);
             suites[count - 1]->name = base_name;
+
+            suites[count - 1]->tests = NULL;
         }
     }
 
