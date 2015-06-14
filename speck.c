@@ -10,14 +10,22 @@
 
 /* Data structures */
 
+struct test_result {
+    int code;
+    char *message;
+};
+
 struct suite {
     char *name;
     char *c_file;
     char *so_file;
     void *handle;
     char **tests;
+    struct test_result *test_results;
     int stat_loc;
 };
+
+extern struct suite *suite_handle;
 
 /* Helper functions */
 
@@ -100,6 +108,12 @@ void register_assertions(void *lib)
     void (*register_assert_equal_i)(void(*)(int, int)) = NULL;
     register_assert_equal_i = dlsym(lib, "register_sp_assert_equal_i");
     register_assert_equal_i(sp_assert_equal_i);
+}
+
+void register_suite(struct suite *suite)
+{
+    void (*set_suite)(struct suite *) = dlsym(suite->handle, "set_suite");
+    set_suite(suite);
 }
 
 void get_tests(struct suite *suite)

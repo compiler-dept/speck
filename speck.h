@@ -3,6 +3,12 @@
 
 #include <stdlib.h>
 
+struct suite *suite_handle = NULL;
+void set_suite(struct suite *suite)
+{
+    suite_handle = suite;
+}
+
 void (*sp_assert)(int) = NULL;
 void register_sp_assert(void (*assign_sp_assert)(int))
 {
