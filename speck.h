@@ -2,17 +2,29 @@
 #define SPECK_H
 
 #include <stdlib.h>
+#include <stdio.h>
 
-void (*sp_assert)(int) = NULL;
-void register_sp_assert(void (*assign_sp_assert)(int))
+/* State */
+
+struct state {
+    int index;
+    int *codes;
+};
+
+struct state state = { .index = 0, .codes = NULL };
+
+/* Assertions */
+
+void sp_assert(int exp)
 {
-    sp_assert = assign_sp_assert;
+    state = 1;
+    puts("ASSERT");
 }
 
-void (*sp_assert_equal_i)(int, int) = NULL;
-void register_sp_assert_equal_i(void (*assign_assert_equal_i)(int, int))
+void sp_assert_equal_i(int x, int y)
 {
-    sp_assert_equal_i = assign_assert_equal_i;
+    state = 2;
+    puts("ASSERT_EQUAL_I");
 }
 
 #endif

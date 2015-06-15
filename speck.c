@@ -10,6 +10,11 @@
 
 /* Data structures */
 
+struct state {
+    int index;
+    int *codes;
+};
+
 struct suite {
     char *name;
     char *c_file;
@@ -17,6 +22,7 @@ struct suite {
     void *handle;
     char **tests;
     int stat_loc;
+    struct state *state;
 };
 
 /* Helper functions */
@@ -77,30 +83,7 @@ char *str_match(const char text[])
     return NULL;
 }
 
-/* Assertions */
-
-void sp_assert(int exp)
-{
-    puts("ASSERT");
-}
-
-void sp_assert_equal_i(int x, int y)
-{
-    puts("ASSERT_EQUAL_I");
-}
-
 /* Control functions */
-
-void register_assertions(void *lib)
-{
-    void (*register_assert)(void(*)(int)) = NULL;
-    register_assert = dlsym(lib, "register_sp_assert");
-    register_assert(sp_assert);
-
-    void (*register_assert_equal_i)(void(*)(int, int)) = NULL;
-    register_assert_equal_i = dlsym(lib, "register_sp_assert_equal_i");
-    register_assert_equal_i(sp_assert_equal_i);
-}
 
 void get_tests(struct suite *suite)
 {
@@ -132,7 +115,7 @@ void load_suite(struct suite *suite)
 
     get_tests(suite);
 
-    register_assertions(suite->handle);
+    suite->state = dlsym(suite->handle, "state");
 }
 
 void run_tests(struct suite *suite)
@@ -141,6 +124,8 @@ void run_tests(struct suite *suite)
 
     for (int i = 0; suite->tests[i] != NULL; i++) {
         test = dlsym(suite->handle, suite->tests[i]);
+        suite->state->index = i;
+        suite->state->codes = realloc(suite->state->codes, (i + 1) * sizeof(int));
         test();
     }
 }
