@@ -12,6 +12,7 @@
 
 struct state {
     int index;
+    char **assertions;
     int *codes;
 };
 
@@ -19,10 +20,10 @@ struct suite {
     char *name;
     char *c_file;
     char *so_file;
+    int stat_loc;
     void *handle;
     char **tests;
-    int stat_loc;
-    struct state *state;
+    struct state **states;
 };
 
 /* Helper functions */
@@ -114,20 +115,29 @@ void load_suite(struct suite *suite)
     suite->handle = dlopen(suite->so_file, RTLD_LAZY);
 
     get_tests(suite);
-
-    suite->state = dlsym(suite->handle, "state");
 }
 
 void run_tests(struct suite *suite)
 {
-    void (*test)(void) = NULL;
+    int i = 0;
+    for (; suite->tests[i] != NULL; i++) {
+        struct state *state = dlsym(suite->handle, "state");
+        state->index = 0;
+        state->codes = NULL;
+        state->assertions = NULL;
 
-    for (int i = 0; suite->tests[i] != NULL; i++) {
-        test = dlsym(suite->handle, suite->tests[i]);
-        suite->state->index = i;
-        suite->state->codes = realloc(suite->state->codes, (i + 1) * sizeof(int));
+        void (*test)(void) = dlsym(suite->handle, suite->tests[i]);
         test();
+
+        suite->states = realloc(suite->states, (i + 1) * sizeof(struct state *));
+        suite->states[i] = malloc(sizeof(struct state));
+        suite->states[i]->index = state->index;
+        suite->states[i]->assertions = state->assertions;
+        suite->states[i]->codes = state->codes;
     }
+
+    suite->states = realloc(suite->states, (i + 1) * sizeof(struct state *));
+    suite->states[i] = NULL;
 }
 
 struct suite **get_suites(void)
@@ -156,6 +166,8 @@ struct suite **get_suites(void)
             suites[count - 1]->name = base_name;
 
             suites[count - 1]->tests = NULL;
+
+            suites[count - 1]->states = NULL;
         }
     }
 
@@ -183,6 +195,22 @@ void free_suites(struct suite **suites)
                 free(suites[i]->tests[j]);
             }
             free(suites[i]->tests);
+
+            if (suites[i]->states) {
+                for (int j = 0; suites[i]->states[j] != NULL; j++) {
+                    if (suites[i]->states[j]->codes) {
+                        free(suites[i]->states[j]->codes);
+                    }
+                    if (suites[i]->states[j]->assertions) {
+                        for (int k = 0; k < suites[i]->states[j]->index; k++) {
+                            free(suites[i]->states[j]->assertions[k]);
+                        }
+                        free(suites[i]->states[j]->assertions);
+                    }
+                    free(suites[i]->states[j]);
+                }
+                free(suites[i]->states);
+            }
         }
 
         free(suites[i]);
@@ -191,14 +219,25 @@ void free_suites(struct suite **suites)
     free(suites);
 }
 
+void print_states(struct suite *suite)
+{
+    for (int i = 0; suite->states[i] != NULL; i++) {
+        for (int j = 0; j < suite->states[i]->index; j++) {
+            if (suite->states[i]->codes[j] != 0) {
+                printf(".");
+            } else {
+                printf("\nAssertion failed: %s!\n", suite->states[i]->assertions[j]);
+            }
+        }
+    }
+}
+
 /* Compilation */
 
 char *compiler = "clang";
 
 int compile_suite(struct suite *suite)
 {
-    printf("Compiling %s ...", suite->name);
-
     char *args[10];
     int idx = 0;
 
@@ -221,10 +260,8 @@ int compile_suite(struct suite *suite)
     } else {
         waitpid(pid, &(suite->stat_loc), 0);
         if (suite->stat_loc == 0) {
-            printf(" DONE\n");
             return 1;
         } else {
-            printf(" ERROR\n");
             return 0;
         }
     }
@@ -237,16 +274,19 @@ int main(int argc, char **argv)
     struct suite **suites = get_suites();
 
     for (int i = 0; suites[i] != NULL; i++) {
-        printf("Suite: %s\n", suites[i]->name);
         if (!compile_suite(suites[i])) {
             continue;
         }
 
         load_suite(suites[i]);
         run_tests(suites[i]);
+
+        print_states(suites[i]);
     }
 
     free_suites(suites);
+
+    printf("\n");
 
     return EXIT_SUCCESS;
 }
