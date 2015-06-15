@@ -238,11 +238,17 @@ char *compiler = "clang";
 
 int compile_suite(struct suite *suite)
 {
-    char *args[10];
+    char *args[11];
     int idx = 0;
 
-    args[idx++] = compiler;
+    char *env_compiler = getenv("CC");
+    if (env_compiler) {
+        args[idx++] = env_compiler;
+    } else {
+        args[idx++] = compiler;
+    }
     args[idx++] = "-Wall";
+    args[idx++] = "-Werror";
     args[idx++] = "-g";
     args[idx++] = "-std=c11";
     args[idx++] = "-fpic";
