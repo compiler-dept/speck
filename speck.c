@@ -8,12 +8,36 @@
 #include <sys/types.h>
 #include <stdarg.h>
 
+
+/* Constants */
+
+static const struct {
+    char *red;
+    char *green;
+    char *yellow;
+    char *blue;
+    char *magenta;
+    char *cyan;
+    char *white;
+    char *normal;
+} colors = {
+    .red     = "\x1B[31m",
+    .green   = "\x1B[32m",
+    .yellow  = "\x1B[33m",
+    .blue    = "\x1B[34m",
+    .magenta = "\x1B[35m",
+    .cyan    = "\x1B[36m",
+    .white   = "\x1B[37m",
+    .normal  = "\x1B[0m"
+};
+
 /* Data structures */
 
 struct state {
     int index;
     char **assertions;
     int *codes;
+    char *function;
 };
 
 struct suite {
@@ -24,6 +48,12 @@ struct suite {
     void *handle;
     char **tests;
     struct state **states;
+};
+
+struct statistic {
+    char *symbols;
+    char **failures;
+    int flag;
 };
 
 /* Helper functions */
@@ -93,7 +123,7 @@ void get_tests(struct suite *suite)
     size_t linelen = 0;
     ssize_t len;
     int test_count = 0;
-    while((len = getline(&line, &linelen, fp)) > 0) {
+    while ((len = getline(&line, &linelen, fp)) > 0) {
         char *temp = str_match(line);
         if (temp) {
             suite->tests = realloc(suite->tests, (test_count + 1) * sizeof(char *));
@@ -125,6 +155,7 @@ void run_tests(struct suite *suite)
         state->index = 0;
         state->codes = NULL;
         state->assertions = NULL;
+        state->function = suite->tests[i];
 
         void (*test)(void) = dlsym(suite->handle, suite->tests[i]);
         test();
@@ -219,16 +250,78 @@ void free_suites(struct suite **suites)
     free(suites);
 }
 
-void print_states(struct suite *suite)
+/* Statistic */
+
+struct statistic *build_statistic(struct suite **suites)
 {
-    for (int i = 0; suite->states[i] != NULL; i++) {
-        for (int j = 0; j < suite->states[i]->index; j++) {
-            if (suite->states[i]->codes[j] != 0) {
-                printf(".");
-            } else {
-                printf("\nAssertion failed: %s!\n", suite->states[i]->assertions[j]);
+    struct statistic *statistic = malloc(sizeof(struct statistic));
+    statistic->symbols = malloc(sizeof(char));
+    statistic->symbols[0] = '\0';
+    statistic->failures = NULL;
+    statistic->flag = 0;
+
+    int index = 0;
+
+    for (int suite = 0; suites[suite] != NULL; suite++) {
+        if (suites[suite]->stat_loc == 0) {
+            for (int state = 0; suites[suite]->states[state] != NULL; state++) {
+                for (int assertion = 0; assertion < suites[suite]->states[state]->index; assertion++) {
+                    size_t length = strlen(statistic->symbols);
+                    statistic->symbols = realloc(statistic->symbols, (length + 5 + 1 + 1) * sizeof(char));
+                    statistic->failures = realloc(statistic->failures, (index + 2) * sizeof(char *));
+                    statistic->failures[index] = NULL;
+                    statistic->failures[index + 1] = NULL;
+
+                    if (suites[suite]->states[state]->codes[assertion] == 0) {
+                        sprintf(statistic->symbols + length, "%s.", colors.green);
+                        alloc_sprintf(&(statistic->failures[index]), "");
+                    } else {
+                        sprintf(statistic->symbols + length, "%sF", colors.red);
+                        alloc_sprintf(&(statistic->failures[index]), "  - %s::%s", suites[suite]->name, suites[suite]->states[state]->assertions[assertion]);
+                        statistic->flag = 1;
+                    }
+
+                    index++;
+                }
             }
         }
+    }
+
+    return statistic;
+}
+
+void print_statistic(struct statistic *statistic)
+{
+    printf("%s\n", statistic->symbols);
+
+    if (statistic->flag) {
+        printf("\n%sFailures:\n", colors.red);
+
+        for (int failure = 0; statistic->failures[failure] != NULL; failure++) {
+            if (strlen(statistic->failures[failure]) > 0) {
+                printf("%s\n", statistic->failures[failure]);
+            }
+        }
+    }
+
+    printf("%s", colors.normal);
+}
+
+void free_statistic(struct statistic *statistic)
+{
+    if (statistic) {
+        if (statistic->symbols) {
+            free(statistic->symbols);
+        }
+
+        if (statistic->failures) {
+            for (int failure = 0; statistic->failures[failure] != NULL; failure++) {
+                free(statistic->failures[failure]);
+            }
+            free(statistic->failures);
+        }
+
+        free(statistic);
     }
 }
 
@@ -265,11 +358,7 @@ int compile_suite(struct suite *suite)
         exit(0);
     } else {
         waitpid(pid, &(suite->stat_loc), 0);
-        if (suite->stat_loc == 0) {
-            return 1;
-        } else {
-            return 0;
-        }
+        return suite->stat_loc;
     }
 }
 
@@ -277,22 +366,28 @@ int compile_suite(struct suite *suite)
 
 int main(int argc, char **argv)
 {
+    int exit_code = EXIT_SUCCESS;
     struct suite **suites = get_suites();
 
-    for (int i = 0; suites[i] != NULL; i++) {
-        if (!compile_suite(suites[i])) {
+    for (int suite = 0; suites[suite] != NULL; suite++) {
+        if (compile_suite(suites[suite]) != 0) {
             continue;
         }
 
-        load_suite(suites[i]);
-        run_tests(suites[i]);
-
-        print_states(suites[i]);
+        load_suite(suites[suite]);
+        run_tests(suites[suite]);
     }
+
+    struct statistic *statistic = build_statistic(suites);
+
+    if (statistic->flag) {
+        exit_code = EXIT_FAILURE;
+    }
+
+    print_statistic(statistic);
+    free_statistic(statistic);
 
     free_suites(suites);
 
-    printf("\n");
-
-    return EXIT_SUCCESS;
+    return exit_code;
 }

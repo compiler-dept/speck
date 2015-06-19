@@ -7,10 +7,10 @@ LDLIBS=-ldl
 all: $(BIN)
 
 test: $(BIN)
-	./speck
+	@./speck
 
 valgrind: $(BIN)
-	valgrind --leak-check=full --error-exitcode=1 ./speck
+	@valgrind --leak-check=full --error-exitcode=1 ./speck
 
 style:
 	astyle -A3s4SpHk3jn "*.c" "*.h" "spec/*.c"
