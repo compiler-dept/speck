@@ -8,7 +8,6 @@
 #include <sys/types.h>
 #include <stdarg.h>
 
-
 /* Constants */
 
 static const struct {
