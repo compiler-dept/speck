@@ -326,19 +326,32 @@ void free_statistic(struct statistic *statistic)
 
 /* Compilation */
 
-char *compiler = "clang";
-
 int compile_suite(struct suite *suite)
 {
-    char *args[11];
+    char *compiler = "clang";
+
+    char *args[24];
     int idx = 0;
 
-    char *env_compiler = getenv("CC");
-    if (env_compiler) {
-        args[idx++] = env_compiler;
+    char *env_cc = getenv("CC");
+    char *env_cflags = getenv("CFLAGS");
+    char *env_ldflags = getenv("LDFLAGS");
+    char *env_ldlibs = getenv("LDLIBS");
+
+    if (env_cc) {
+        args[idx++] = env_cc;
     } else {
         args[idx++] = compiler;
     }
+
+    if (env_cflags) {
+        args[idx++] = env_cflags;
+    }
+
+    if (env_ldflags) {
+        args[idx++] = env_ldflags;
+    }
+
     args[idx++] = "-Wall";
     args[idx++] = "-Werror";
     args[idx++] = "-g";
@@ -348,6 +361,11 @@ int compile_suite(struct suite *suite)
     args[idx++] = "-o";
     args[idx++] = suite->so_file;
     args[idx++] = suite->c_file;
+
+    if (env_ldlibs) {
+        args[idx++] = env_ldlibs;
+    }
+
     args[idx] = NULL;
 
     pid_t pid = fork();
