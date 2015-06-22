@@ -1,15 +1,20 @@
 BIN=speck
-CFLAGS=-Wall -g -std=c11
+CFLAGS=-Wall -g
 LDLIBS=-ldl
 
 .PHONY: all test valgrind clean
 
 all: $(BIN)
 
-test: $(BIN)
+TESTS=$(patsubst %.c, %.so, $(wildcard spec/*.c))
+
+spec/%.so: spec/%.c
+	@$(CC) -fPIC -shared -o $@ $<
+
+test: speck $(TESTS)
 	@./speck
 
-valgrind: $(BIN)
+valgrind: speck $(TESTS)
 	@valgrind --leak-check=full --error-exitcode=1 ./speck
 
 style:

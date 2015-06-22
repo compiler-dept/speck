@@ -43,7 +43,6 @@ struct suite {
     char *name;
     char *c_file;
     char *so_file;
-    int stat_loc;
     void *handle;
     char **tests;
     struct state **states;
@@ -180,12 +179,12 @@ struct suite **get_suites(void)
 
     int count = 0;
     while ((entry = readdir(directory)) != NULL) {
-        if (strstr(entry->d_name, ".c") != NULL) {
+        if (strstr(entry->d_name, ".so") != NULL) {
             count++;
             suites = realloc(suites, count * sizeof(struct suite *));
             suites[count - 1] = malloc(sizeof(struct suite));
 
-            size_t len = strstr(entry->d_name, ".c") - entry->d_name;
+            size_t len = strstr(entry->d_name, ".so") - entry->d_name;
             char *base_name = malloc((len + 1) * sizeof(char));
 
             memcpy(base_name, entry->d_name, len);
@@ -218,29 +217,28 @@ void free_suites(struct suite **suites)
         free(suites[i]->c_file);
         free(suites[i]->so_file);
 
-        if (suites[i]->stat_loc == 0) {
-            dlclose(suites[i]->handle);
 
-            for (int j = 0; suites[i]->tests[j] != NULL; j++) {
-                free(suites[i]->tests[j]);
-            }
-            free(suites[i]->tests);
+        dlclose(suites[i]->handle);
 
-            if (suites[i]->states) {
-                for (int j = 0; suites[i]->states[j] != NULL; j++) {
-                    if (suites[i]->states[j]->codes) {
-                        free(suites[i]->states[j]->codes);
-                    }
-                    if (suites[i]->states[j]->assertions) {
-                        for (int k = 0; k < suites[i]->states[j]->index; k++) {
-                            free(suites[i]->states[j]->assertions[k]);
-                        }
-                        free(suites[i]->states[j]->assertions);
-                    }
-                    free(suites[i]->states[j]);
+        for (int j = 0; suites[i]->tests[j] != NULL; j++) {
+            free(suites[i]->tests[j]);
+        }
+        free(suites[i]->tests);
+
+        if (suites[i]->states) {
+            for (int j = 0; suites[i]->states[j] != NULL; j++) {
+                if (suites[i]->states[j]->codes) {
+                    free(suites[i]->states[j]->codes);
                 }
-                free(suites[i]->states);
+                if (suites[i]->states[j]->assertions) {
+                    for (int k = 0; k < suites[i]->states[j]->index; k++) {
+                        free(suites[i]->states[j]->assertions[k]);
+                    }
+                    free(suites[i]->states[j]->assertions);
+                }
+                free(suites[i]->states[j]);
             }
+            free(suites[i]->states);
         }
 
         free(suites[i]);
@@ -262,26 +260,24 @@ struct statistic *build_statistic(struct suite **suites)
     int index = 0;
 
     for (int suite = 0; suites[suite] != NULL; suite++) {
-        if (suites[suite]->stat_loc == 0) {
-            for (int state = 0; suites[suite]->states[state] != NULL; state++) {
-                for (int assertion = 0; assertion < suites[suite]->states[state]->index; assertion++) {
-                    size_t length = strlen(statistic->symbols);
-                    statistic->symbols = realloc(statistic->symbols, (length + 5 + 1 + 1) * sizeof(char));
-                    statistic->failures = realloc(statistic->failures, (index + 2) * sizeof(char *));
-                    statistic->failures[index] = NULL;
-                    statistic->failures[index + 1] = NULL;
+        for (int state = 0; suites[suite]->states[state] != NULL; state++) {
+            for (int assertion = 0; assertion < suites[suite]->states[state]->index; assertion++) {
+                size_t length = strlen(statistic->symbols);
+                statistic->symbols = realloc(statistic->symbols, (length + 5 + 1 + 1) * sizeof(char));
+                statistic->failures = realloc(statistic->failures, (index + 2) * sizeof(char *));
+                statistic->failures[index] = NULL;
+                statistic->failures[index + 1] = NULL;
 
-                    if (suites[suite]->states[state]->codes[assertion] == 0) {
-                        sprintf(statistic->symbols + length, "%s.", colors.green);
-                        alloc_sprintf(&(statistic->failures[index]), "");
-                    } else {
-                        sprintf(statistic->symbols + length, "%sF", colors.red);
-                        alloc_sprintf(&(statistic->failures[index]), "  - %s::%s", suites[suite]->name, suites[suite]->states[state]->assertions[assertion]);
-                        statistic->flag = 1;
-                    }
-
-                    index++;
+                if (suites[suite]->states[state]->codes[assertion] == 0) {
+                    sprintf(statistic->symbols + length, "%s.", colors.green);
+                    alloc_sprintf(&(statistic->failures[index]), "");
+                } else {
+                    sprintf(statistic->symbols + length, "%sF", colors.red);
+                    alloc_sprintf(&(statistic->failures[index]), "  - %s::%s", suites[suite]->name, suites[suite]->states[state]->assertions[assertion]);
+                    statistic->flag = 1;
                 }
+
+                index++;
             }
         }
     }
@@ -324,61 +320,6 @@ void free_statistic(struct statistic *statistic)
     }
 }
 
-/* Compilation */
-
-int compile_suite(struct suite *suite)
-{
-    char *compiler = "clang";
-
-    char *args[24];
-    int idx = 0;
-
-    char *env_cc = getenv("CC");
-    char *env_cflags = getenv("CFLAGS");
-    char *env_ldflags = getenv("LDFLAGS");
-    char *env_ldlibs = getenv("LDLIBS");
-
-    if (env_cc) {
-        args[idx++] = env_cc;
-    } else {
-        args[idx++] = compiler;
-    }
-
-    if (env_cflags) {
-        args[idx++] = env_cflags;
-    }
-
-    if (env_ldflags) {
-        args[idx++] = env_ldflags;
-    }
-
-    args[idx++] = "-Wall";
-    args[idx++] = "-Werror";
-    args[idx++] = "-g";
-    args[idx++] = "-std=c11";
-    args[idx++] = "-fpic";
-    args[idx++] = "-shared";
-    args[idx++] = "-o";
-    args[idx++] = suite->so_file;
-    args[idx++] = suite->c_file;
-
-    if (env_ldlibs) {
-        args[idx++] = env_ldlibs;
-    }
-
-    args[idx] = NULL;
-
-    pid_t pid = fork();
-
-    if (pid == 0) {
-        execvp(compiler, args);
-        exit(0);
-    } else {
-        waitpid(pid, &(suite->stat_loc), 0);
-        return suite->stat_loc;
-    }
-}
-
 /* Main */
 
 int main(int argc, char **argv)
@@ -387,10 +328,6 @@ int main(int argc, char **argv)
     struct suite **suites = get_suites();
 
     for (int suite = 0; suites[suite] != NULL; suite++) {
-        if (compile_suite(suites[suite]) != 0) {
-            continue;
-        }
-
         load_suite(suites[suite]);
         run_tests(suites[suite]);
     }
