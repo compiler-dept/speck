@@ -14,9 +14,8 @@ itself and its written also in pure C.
 ## Quick Start
 
 To get started using `Speck` for your tests, you just have to copy the files
-`[speck.c](https://github.com/compiler-dept/speck/blob/master/speck.c)` and
-`[speck.h](https://github.com/compiler-dept/speck/blob/master/speck.h)` into the
-root folder of your C project. Create a folder called `spec`:
+`speck.c` and `speck.h` into the root folder of your C project. Create a folder
+called `spec`:
 
     $ mkdir spec
 
