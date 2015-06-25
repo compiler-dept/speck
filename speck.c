@@ -179,12 +179,13 @@ struct suite **get_suites(void)
 
     int count = 0;
     while ((entry = readdir(directory)) != NULL) {
-        if (strstr(entry->d_name, ".so") != NULL) {
+        char *found = strstr(entry->d_name, ".so");
+        if (found != NULL && found[3] == '\0') {
             count++;
             suites = realloc(suites, count * sizeof(struct suite *));
             suites[count - 1] = malloc(sizeof(struct suite));
 
-            size_t len = strstr(entry->d_name, ".so") - entry->d_name;
+            size_t len = found - entry->d_name;
             char *base_name = malloc((len + 1) * sizeof(char));
 
             memcpy(base_name, entry->d_name, len);
