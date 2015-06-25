@@ -14,8 +14,9 @@ itself and its written also in pure C.
 ## Quick Start
 
 To get started using `Speck` for your tests, you just have to copy the files
-`speck.c` and `speck.h` into the root folder of your C project. Create a folder
-called `spec`:
+`[speck.c](https://github.com/compiler-dept/speck/blob/master/speck.c)` and
+`[speck.h](https://github.com/compiler-dept/speck/blob/master/speck.h)` into the
+root folder of your C project. Create a folder called `spec`:
 
     $ mkdir spec
 
@@ -118,3 +119,14 @@ There are currently the following assertions implemented:
 false.
 - `sp_assert_equal_i(number_a, number_b)`: Evaluate the equality of both numbers
 and fail if they're different.
+
+## Running Speck
+
+If you have finished writing your test suites you can run `Speck` with:
+
+    $ make test
+
+## A Real-World Example
+
+If you want to see `Speck` in real-life you can checkout our
+[LibCollect](https://github.com/compiler-dept/libcollect) project.
