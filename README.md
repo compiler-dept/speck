@@ -15,14 +15,14 @@ itself and its written also in pure C.
 
 To get started using `Speck` for your tests, you just have to copy the files
 `speck.c` and `speck.h` into the root folder of your C project. Create a folder
-called `spec`:
+called `spec` that will hold your test suites:
 
     $ mkdir spec
 
-You will need to add some rule to your `Makefile` in order to compile `speck`
+You will need to add some rules to your `Makefile` in order to compile `speck`
 and your tests.
 
-The first rule you need to add is the the list of test suites:
+The first rule you need to add, is the list of test suites:
 
     SUITES=$(patsubst %.c, %.so, $(wildcard spec/*.c))
 
@@ -30,9 +30,9 @@ This is a wildcard matcher that matches all `.c` files in your `spec` folder as
 a single test suite.
 
 Every `Speck` test suite is compiled into a shared object file (`.so`) and then
-loaded and executed by `Speck`. So, every piece of code that needs to be tested
-has to be compiled into the single test suites. For that you need to add another
-rule to your `Makefile`:
+loaded and executed by `Speck`. Every piece of code that needs to be tested
+has to be compiled additionally into the test suites. For that you need to add
+another rule to your `Makefile`:
 
     spec/%.so: spec/%.c
         @$(CC) -fPIC -shared -o $@ $<
@@ -46,8 +46,8 @@ Of cause we need a rule to compile `Speck` itself:
     speck: speck.c
     	$(CC) -std=c11 -o $@ $< -ldl
 
-We're almost done, but it would be nice to be able to call your test with
-`make test`. Therefore we need a last rule:
+We're almost done, but wouldn't it be nice to be able to call your test with
+`make test`? Therefore we need a last rule:
 
     test: speck $(SUITES)
     	@./speck
@@ -55,7 +55,7 @@ We're almost done, but it would be nice to be able to call your test with
 The rule tells `make`, that if the target `test` is executed, `Speck` and all
 test suites have to be compiled and then execute `Speck`.
 
-Here again all additions to your `Makefile`:
+Again, all additions to your `Makefile` at once:
 
     SUITES=$(patsubst %.c, %.so, $(wildcard spec/*.c))
 
@@ -82,8 +82,8 @@ header file `speck.h`
 
     #include "../speck.h"
 
-Because the suites are plain C, you can include any header you want to build
-your tests.
+Because the test suites are plain C, you can include any header you want, to
+build your tests.
 
 `Speck` searches for specific test function that are later executed. They must
 match the following form:
@@ -94,7 +94,7 @@ match the following form:
     }
 
 The only thing you can change is the `<name>` tag of the function. `Speck` will
-run all function defined like these. Let's write a first test for our suite:
+run all functions defined like these. Let's write a first test for our suite:
 
     void spec_addition(void)
     {
@@ -105,8 +105,8 @@ run all function defined like these. Let's write a first test for our suite:
 
 As you can see, we wrote some code we want to test (`int number = 4 + 3;`). We
 assume we are testing the `+` operator for its correctness. To give `Speck` a
-hint about if every went ok or wrong, you have to use assertions. There are
-different types of assertions implemented. Scroll down to find out what
+hint about if everything went okay or wrong, you have to use assertions. There
+are different types of assertions implemented. Scroll down to find out what
 assertions are possible. In the **addition** example above, we let `Speck` check
 that `number` is indeed `7` at the end of the test.
 
@@ -114,14 +114,14 @@ that `number` is indeed `7` at the end of the test.
 
 There are currently the following assertions implemented:
 
-- `sp_assert(expression)`: Evaluate the expression and fail if the return is
+- `sp_assert(expression)`: Evaluate the expression and fail if the result is
 false.
 - `sp_assert_equal_i(number_a, number_b)`: Evaluate the equality of both numbers
 and fail if they're different.
 
 ## Running Speck
 
-If you have finished writing your test suites you can run `Speck` with:
+If you have finished writing your test suites, you can run `Speck`:
 
     $ make test
 
