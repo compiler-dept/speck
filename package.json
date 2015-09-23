@@ -6,8 +6,7 @@
         "speck.h"
     ],
     "repo": "compiler-dept/speck",
-    "description": "Speck is a small and fast unit testing framework for the C programming
-    language.",
+    "description": "Speck is a small and fast unit testing framework for the C programming language.",
     "keywords": [
         "C",
         "Unit Testing"
