@@ -109,11 +109,10 @@ int alloc_sprintf(char **str, const char *format, ...)
     return size;
 }
 
-char *str_match(const char text[])
+char *str_match(const char text[], size_t textlen)
 {
     char str[] = "void spec_";
     int len = 10;
-    size_t textlen = strlen(text);
 
     if (textlen >= len) {
         for (int i = 0; i < len; i++) {
@@ -146,7 +145,7 @@ void get_tests(struct suite *suite)
     ssize_t len;
     int test_count = 0;
     while ((len = getline(&line, &linelen, fp)) > 0) {
-        char *temp = str_match(line);
+        char *temp = str_match(line, len);
         if (temp) {
             suite->tests = realloc(suite->tests, (test_count + 1) * sizeof(char *));
             suite->tests[test_count++] = temp;
