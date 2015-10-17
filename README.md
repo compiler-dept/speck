@@ -118,7 +118,7 @@ There are currently the following assertions implemented:
 false.
 - `sp_assert_equal_i(number_a, number_b)`: Evaluate the equality of both numbers
 and fail if they're different.
-- `sp_assert_equal_d(double_a, double_b, epsilon`: Pass if double_a and double_b are within epsilon of each other.
+- `sp_assert_equal_d(double_a, double_b, epsilon)`: Pass if double_a and double_b are within epsilon of each other.
 
 ## Running Speck
 
