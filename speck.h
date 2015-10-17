@@ -29,6 +29,7 @@ SOFTWARE.
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#include <math.h>
 
 /* State */
 
@@ -87,6 +88,24 @@ void sp_assert_equal_i(int x, int y)
     state.codes = realloc(state.codes, (state.index + 1) * sizeof(int));
 
     if (x == y) {
+        state.codes[state.index] = 0;
+    } else {
+        state.codes[state.index] = 1;
+    }
+
+    state.index++;
+}
+
+/* for assertion to pass, x and y must be within epsilon of each other */
+void sp_assert_equal_d(double x, double y, double epsilon)
+{
+    state.assertions = realloc(state.assertions, (state.index + 1) * sizeof(char *));
+    alloc_sprintf(&(state.assertions[state.index]), "%s::sp_assert(%d, %d)", state.function, x, y);
+
+    state.codes = realloc(state.codes, (state.index + 1) * sizeof(int));
+    
+    double diff = fabs(x-y);
+    if (diff < epsilon) {
         state.codes[state.index] = 0;
     } else {
         state.codes[state.index] = 1;
