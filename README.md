@@ -11,7 +11,37 @@ copied into your project. There is also no need for extra scripts that
 generate your test code from a specification. Your specification is the test
 itself and it too is written in pure C.
 
-## Quick Start
+## Setup
+
+Speck offers two ways to integrate it into your C project. You can ether set it
+up by importing it as a Git submodule or by manual install. The preferred way
+by now is using a Git submodule. It makes updating `Speck` a lot easier in the
+long run.
+
+### Git Submodule
+
+Importing `Speck` as a Git submodule works like importing every other submodule:
+
+    $ git submodule add https://github.com/compiler-dept/speck.git
+
+This creates a folder called `speck` containing the test framework. `Speck` is
+distributed with a `Makefile` include `speck.mk`, that makes it a lot easier to
+set it up. `speck.mk` contains all necessary targets to build `Speck` and your
+test suites.
+
+Everything you have to do is, including the file `speck.mk` into your
+`Makefile`:
+
+    include speck/speck.mk
+
+Now, all variables and target needed for `Speck` are available in your
+`Makefile`. The only thing that is left to do, is creating a target to run your
+test suites. Let's call it `test`:
+
+    test: $(SPECK) $(SUITES)
+        @$(SPECK)
+
+### Manual Setup
 
 To get started using `Speck` for your tests, you just have to copy the files
 `speck.c` and `speck.h` into the root folder of your C project. Create a folder

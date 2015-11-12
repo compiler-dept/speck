@@ -9,10 +9,10 @@ all: $(BIN)
 SPECK_PATH=.
 include speck.mk
 
-test: $(SPECK) $(TESTS)
+test: $(SPECK) $(SUITES)
 	@$(SPECK)
 
-valgrind: $(SPECK) $(TESTS)
+valgrind: $(SPECK) $(SUITES)
 	@valgrind --leak-check=full --error-exitcode=1 $(SPECK)
 
 style:
