@@ -14,7 +14,7 @@ itself and it too is written in pure C.
 ## Setup
 
 Speck offers two ways to integrate it into your C project. You can ether set it
-up by importing it as a Git submodule or by manual install. The preferred way
+up by importing it as a Git submodule or by manual install. The preferred method
 by now is using a Git submodule. It makes updating `Speck` a lot easier in the
 long run.
 
@@ -26,20 +26,38 @@ Importing `Speck` as a Git submodule works like importing every other submodule:
 
 This creates a folder called `speck` containing the test framework. `Speck` is
 distributed with a `Makefile` include `speck.mk`, that makes it a lot easier to
-set it up. `speck.mk` contains all necessary targets to build `Speck` and your
-test suites.
+set it up. `speck.mk` contains all necessary targets and variables to build
+`Speck` and your test suites.
 
 Everything you have to do is, including the file `speck.mk` into your
 `Makefile`:
 
     include speck/speck.mk
 
-Now, all variables and target needed for `Speck` are available in your
+Now, all variables and targets needed for `Speck` are available in your
 `Makefile`. The only thing that is left to do, is creating a target to run your
 test suites. Let's call it `test`:
 
     test: $(SPECK) $(SUITES)
         @$(SPECK)
+
+To compile and execute your test suite you can now use a simple `make test`
+command.
+
+`speck.mk` also provides you with some variables you can set in your `Makefile`
+to control what is compiled and linked into your test suites:
+
+- `SPECK_CFLAGS`: Additional CFLAGS used for compilation of every test suite
+(e.g. -Werror or -Iinclude).
+- `SPECK_LDFLAGS`: Additional LDFLAGS used for compilation of every test suite
+(e.g. -Llibs).
+- `SPECK_LIBS`: Additional files and libraries for linking with every test
+suite. This is where you put the code you want to test (e.g. -lpthread or just
+src/file.c).
+
+If you want to put `Speck` into another folder than `speck`, you can do so. But
+you have to set the `SPECK_PATH` variable in your `Makefile` to the location,
+to ensure that `Speck` is working as expected.
 
 ### Manual Setup
 
