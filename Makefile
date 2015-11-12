@@ -1,6 +1,4 @@
 BIN=speck
-CFLAGS=-Wall -g
-LDLIBS=-ldl
 
 .PHONY: all test valgrind clean
 

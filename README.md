@@ -29,7 +29,11 @@ distributed with a `Makefile` include `speck.mk`, that makes it a lot easier to
 set it up. `speck.mk` contains all necessary targets and variables to build
 `Speck` and your test suites.
 
-Everything you have to do is, including the file `speck.mk` into your
+Create a folder called `spec` that will hold your test suites:
+
+    $ mkdir spec
+
+Everything else you have to do, is including the file `speck.mk` into your
 `Makefile`:
 
     include speck/speck.mk
@@ -40,9 +44,6 @@ test suites. Let's call it `test`:
 
     test: $(SPECK) $(SUITES)
         @$(SPECK)
-
-To compile and execute your test suite you can now use a simple `make test`
-command.
 
 `speck.mk` also provides you with some variables you can set in your `Makefile`
 to control what is compiled and linked into your test suites:
@@ -61,9 +62,13 @@ to ensure that `Speck` is working as expected.
 
 ### Manual Setup
 
-To get started using `Speck` for your tests, you just have to copy the files
-`speck.c` and `speck.h` into the root folder of your C project. Create a folder
-called `spec` that will hold your test suites:
+If you aren't using Git or don't want to use a Git submodule you can follow this
+manual setup. In order to update your copy of `Speck` you have to take care of
+that yourself instead of doing a simple `git submodule update`.
+
+To get started, you just have to copy the files `speck.c` and `speck.h` into the
+root folder of your C project. Create a folder called `spec` that will hold your
+test suites:
 
     $ mkdir spec
 
@@ -79,11 +84,11 @@ a single test suite.
 
 Every `Speck` test suite is compiled into a shared object file (`.so`) and then
 loaded and executed by `Speck`. Every piece of code that needs to be tested
-has to be compiled additionally into the test suites. For this to work you need to add
-another rule to your `Makefile`:
+has to be compiled additionally into the test suites. For this to work you need
+to add another rule to your `Makefile`:
 
     spec/%.so: spec/%.c
-        @$(CC) -fPIC -shared -o $@ $<
+        @$(CC) -Ispeck -fPIC -shared -o $@ $<
 
 At the end of the second line you can attach further files (`.c`, `.o`, `.s`) or
 libraries (`-lx`) to pull in all code needed for execution. You can also use all
@@ -94,8 +99,8 @@ Of course we need a rule to compile `Speck` itself:
     speck: speck.c
     	$(CC) -std=c11 -o $@ $< -ldl
 
-Don't worry, we're almost done. However, wouldn't it be nice to be able to call your tests with
-`make test`? Therefore we need a last rule:
+Don't worry, we're almost done. However, wouldn't it be nice to be able to call
+your tests with `make test`? Therefore we need a last rule:
 
     test: speck $(SUITES)
     	@./speck
@@ -128,13 +133,13 @@ Let's create a first test suite to test some arithmetics:
 The first thing you need to do is insert the `include` to the
 header file `speck.h` into the suite.
 
-    #include "../speck.h"
+    #include <speck.h>
 
 Because the test suites are plain C, you can include any header you want, to
 build your tests.
 
-`Speck` searches for specific test functions that are to be executed later. They must
-match the following form:
+`Speck` searches for specific test functions that are to be executed later. They
+must match the following form:
 
     void spec_<name>(void)
     {
@@ -153,10 +158,10 @@ run all functions defined this way. Let's write a first test for our suite:
 
 As you can see, we wrote some code we want to test (`int number = 4 + 3;`). We
 assume we are testing the `+` operator for its correctness. To give `Speck` a
-way of determining if everything worked out as expected , you have to use assertions. There
-are different types of assertions implemented. Scroll down to find out what
-assertions are possible. In the **addition** example above, we let `Speck` check
-that `number` is indeed `7` at the end of the test.
+way of determining if everything worked out as expected , you have to use
+assertions. There are different types of assertions implemented. Scroll down to
+find out what assertions are possible. In the **addition** example above, we let
+`Speck` check that `number` is indeed `7` at the end of the test.
 
 ## Assertions
 
