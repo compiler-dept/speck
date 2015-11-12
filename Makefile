@@ -6,16 +6,14 @@ LDLIBS=-ldl
 
 all: $(BIN)
 
-TESTS=$(patsubst %.c, %.so, $(wildcard spec/*.c))
+SPECK_PATH=.
+include speck.mk
 
-spec/%.so: spec/%.c
-	@$(CC) -fPIC -shared -o $@ $<
+test: $(SPECK) $(TESTS)
+	@$(SPECK)
 
-test: speck $(TESTS)
-	@./speck
-
-valgrind: speck $(TESTS)
-	@valgrind --leak-check=full --error-exitcode=1 ./speck
+valgrind: $(SPECK) $(TESTS)
+	@valgrind --leak-check=full --error-exitcode=1 $(SPECK)
 
 style:
 	astyle -A3s4SpHk3jn "*.c" "*.h" "spec/*.c"
