@@ -13,10 +13,10 @@ itself and it too is written in pure C.
 
 ## Setup
 
-Speck offers two ways to integrate it into your C project. You can ether set it
+Speck offers two ways to integrate it into your C project. You can either set it
 up by importing it as a Git submodule or by manual install. The preferred method
-by now is using a Git submodule. It makes updating `Speck` a lot easier in the
-long run.
+presently is using a Git submodule. It makes updating `Speck` a lot easier in
+the long run.
 
 ### Git Submodule
 
