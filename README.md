@@ -56,7 +56,7 @@ to control what is compiled and linked into your test suites:
 suite. This is where you put the code you want to test (e.g. -lpthread or just
 src/file.c).
 
-If you want to put `Speck` into another folder than `speck`, you can do so. But
+If you want to put `Speck` into a folder other than `speck`, you can do so. But
 you have to set the `SPECK_PATH` variable in your `Makefile` to the location,
 to ensure that `Speck` is working as expected.
 
