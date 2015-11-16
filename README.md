@@ -1,22 +1,24 @@
 # Speck
 
-[![Build Status](https://travis-ci.org/compiler-dept/speck.svg?branch=master)](https://travis-ci.org/compiler-dept/speck)
+[![Build
+Status](https://travis-ci.org/compiler-dept/speck.svg?branch=master)](https://travis-ci.org/compiler-dept/speck)
 
 `Speck`, pronounced as /ˈbeɪ.kən/.
 
 `Speck` is a small and fast unit testing framework for the C programming
 language, that helps you to keep track of your programs integrity throughout
-your development. It is provided as a set of just two source files that are
-copied into your project. There is also no need for extra scripts that
-generate your test code from a specification. Your specification is the test
-itself and it too is written in pure C.
+your development. It is provided as a set of just two source files that can be
+copied into your project. There is also no need for extra scripts that generate
+your test code from a specification. Your specification is the test itself and
+it too is written in pure C.
 
 ## Setup
 
-Speck offers two ways to integrate it into your C project. You can either set it
-up by importing it as a Git submodule or by manual install. The preferred method
-presently is using a Git submodule. It makes updating `Speck` a lot easier in
-the long run.
+Speck offers three ways to integrate it into your C project. You can set it up
+by importing it as a Git submodule, by using
+[clib(1)](https://github.com/clibs/clib) package manager or by manual install.
+The preferred method presently is using a Git submodule. It makes updating
+`Speck` a lot easier in the long run.
 
 ### Git Submodule
 
@@ -60,6 +62,30 @@ If you want to put `Speck` into a folder other than `speck`, you can do so. But
 you have to set the `SPECK_PATH` variable in your `Makefile` to the location,
 to ensure that `Speck` is working as expected.
 
+### Using clib(1)
+
+Another way to set up `Speck` is using the nice and small
+[clib(1)](https://github.com/clibs/clib) package manager for C. You should use
+this method, if you are not using Git or a Git submodule is not suitable for you
+and you want easy updating of `Speck`.
+
+You can install `Speck` with a single command:
+
+    $ clib install compiler-dept/speck
+
+`clib(1)` creates a subfolder in your project directory called `deps`. Every
+dependency installed through `clib` is maintained in that directory.
+
+this way of installation comes with a small adjustment that is needed to be able
+to use `Speck`. Because `clib` is installing all dependencies into the `deps`
+directory, the default path for `Speck` has changed. You need to adjust the path
+in your Makefile:
+
+    SPECK_PATH=deps/speck
+    include deps/speck/speck.mk
+
+From here on, you can follow the setup method from the Git variant above.
+
 ### Manual Setup
 
 If you aren't using Git or don't want to use a Git submodule you can follow this
@@ -79,13 +105,13 @@ The first rule you need to add, is the list of test suites:
 
     SUITES=$(patsubst %.c, %.so, $(wildcard spec/*.c))
 
-This wildcard matches all `.c` files in your `spec` folder as
-a single test suite.
+This wildcard matches all `.c` files in your `spec` folder as a single test
+suite.
 
 Every `Speck` test suite is compiled into a shared object file (`.so`) and then
-loaded and executed by `Speck`. Every piece of code that needs to be tested
-has to be compiled additionally into the test suites. For this to work you need
-to add another rule to your `Makefile`:
+loaded and executed by `Speck`. Every piece of code that needs to be tested has
+to be compiled additionally into the test suites. For this to work you need to
+add another rule to your `Makefile`:
 
     spec/%.so: spec/%.c
         @$(CC) -Ispeck -fPIC -shared -o $@ $<
@@ -130,8 +156,8 @@ Let's create a first test suite to test some arithmetics:
 
     $ touch spec/arithmetics.c
 
-The first thing you need to do is insert the `include` to the
-header file `speck.h` into the suite.
+The first thing you need to do is insert the `include` to the header file
+`speck.h` into the suite.
 
     #include <speck.h>
 
