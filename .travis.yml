@@ -1,9 +1,11 @@
 language: c
+sudo: false
 compiler:
   - clang
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq valgrind
+addons:
+  apt:
+    packages:
+    - valgrind
 script:
   - make
   - make test
