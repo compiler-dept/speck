@@ -3,7 +3,8 @@
     "version": "v0.1.0",
     "src": [
         "speck.c",
-        "speck.h"
+        "speck.h",
+        "speck.mk"
     ],
     "repo": "compiler-dept/speck",
     "description": "Speck is a small and fast unit testing framework for the C programming language.",
