@@ -38,7 +38,7 @@ Create a folder called `spec` that will hold your test suites:
 Everything else you have to do, is including the file `speck.mk` into your
 `Makefile`:
 
-    include speck/speck.mk
+    -include speck/speck.mk
 
 Now, all variables and targets needed for `Speck` are available in your
 `Makefile`. The only thing that is left to do, is creating a target to run your
@@ -82,7 +82,7 @@ directory, the default path for `Speck` has changed. You need to adjust the path
 in your Makefile:
 
     SPECK_PATH=deps/speck
-    include deps/speck/speck.mk
+    -include deps/speck/speck.mk
 
 From here on, you can follow the setup method from the Git variant above.
 
