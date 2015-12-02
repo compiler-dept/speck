@@ -297,7 +297,7 @@ struct statistic *build_statistic(struct suite **suites)
                     alloc_sprintf(&(statistic->failures[index]), "");
                 } else {
                     sprintf(statistic->symbols + length, "%sF", colors.red);
-                    alloc_sprintf(&(statistic->failures[index]), "  - %s::%s", suites[suite]->name, suites[suite]->states[state]->assertions[assertion]);
+                    alloc_sprintf(&(statistic->failures[index]), "  - %s.c%s", suites[suite]->name, suites[suite]->states[state]->assertions[assertion]);
                     statistic->flag = 1;
                 }
 

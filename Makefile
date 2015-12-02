@@ -5,7 +5,7 @@ BIN=speck
 all: $(BIN)
 
 SPECK_PATH=.
-include speck.mk
+-include speck.mk
 
 test: $(SPECK) $(SUITES)
 	@$(SPECK)
