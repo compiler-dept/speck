@@ -1,5 +1,4 @@
-#include <stdio.h>
-#include "../speck.h"
+#include <speck.h>
 
 void spec_sample_one(void)
 {

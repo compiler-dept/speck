@@ -63,10 +63,12 @@ int alloc_sprintf(char **str, const char *format, ...)
 
 /* Assertions */
 
-void sp_assert(int expr)
+#define sp_assert(expr) sp_assert_lineno(expr, __LINE__)
+
+void sp_assert_lineno(int expr, int lineno)
 {
     state.assertions = realloc(state.assertions, (state.index + 1) * sizeof(char *));
-    alloc_sprintf(&(state.assertions[state.index]), "%s::sp_assert(%d)", state.function, expr);
+    alloc_sprintf(&(state.assertions[state.index]), ":%d -> %s::sp_assert(%d)", lineno, state.function, expr);
 
     state.codes = realloc(state.codes, (state.index + 1) * sizeof(int));
 
@@ -79,10 +81,12 @@ void sp_assert(int expr)
     state.index++;
 }
 
-void sp_assert_equal_i(int x, int y)
+#define sp_assert_equal_i(x, y) sp_assert_equal_i_lineno(x, y, __LINE__)
+
+void sp_assert_equal_i_lineno(int x, int y, int lineno)
 {
     state.assertions = realloc(state.assertions, (state.index + 1) * sizeof(char *));
-    alloc_sprintf(&(state.assertions[state.index]), "%s::sp_assert(%d, %d)", state.function, x, y);
+    alloc_sprintf(&(state.assertions[state.index]), ":%d -> %s::sp_assert(%d, %d)", lineno, state.function, x, y);
 
     state.codes = realloc(state.codes, (state.index + 1) * sizeof(int));
 
