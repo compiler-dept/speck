@@ -31,6 +31,7 @@ SOFTWARE.
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <stdarg.h>
+#include <time.h>
 
 /* Constants */
 
@@ -133,6 +134,16 @@ char *str_match(const char text[], size_t textlen)
     }
 
     return NULL;
+}
+
+clock_t start_watch()
+{
+    return clock();
+}
+
+void stop_watch(clock_t watch, const char *name)
+{
+    printf("\n%s took %f seconds.\n", name, (double)(clock() - watch) / CLOCKS_PER_SEC);
 }
 
 /* Control functions */
@@ -348,6 +359,8 @@ void free_statistic(struct statistic *statistic)
 
 int main(int argc, char **argv)
 {
+    time_t watch = start_watch();
+
     int exit_code = EXIT_SUCCESS;
     struct suite **suites = get_suites();
 
@@ -366,6 +379,8 @@ int main(int argc, char **argv)
     free_statistic(statistic);
 
     free_suites(suites);
+
+    stop_watch(watch, "Running all suites");
 
     return exit_code;
 }
