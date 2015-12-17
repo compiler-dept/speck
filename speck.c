@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#define _XOPEN_SOURCE 700
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <dlfcn.h>
@@ -30,10 +32,15 @@ SOFTWARE.
 #include <dirent.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <sys/msg.h>
 #include <stdarg.h>
 #include <time.h>
 
 /* Constants */
+
+#ifndef MSGMAX
+#define MSGMAX 256
+#endif
 
 static const struct {
     char *red;
@@ -55,6 +62,21 @@ static const struct {
     .normal  = "\x1B[0m"
 };
 
+/* Global variables */
+
+static struct {
+    unsigned int fork_mode : 1;
+} flags = {
+    .fork_mode = 0
+};
+
+/* Enumerations */
+
+enum message_type {
+    MSG_MESSAGE = 1,
+    MSG_DONE
+};
+
 /* Data structures */
 
 struct state {
@@ -62,6 +84,8 @@ struct state {
     char **assertions;
     int *codes;
     char *function;
+    pid_t pid;
+    int stat_loc;
 };
 
 struct suite {
@@ -77,6 +101,12 @@ struct statistic {
     char *symbols;
     char **failures;
     int flag;
+};
+
+struct message {
+    long type;
+    int code;
+    char assertion[MSGMAX];
 };
 
 /* Helper functions */
@@ -190,13 +220,118 @@ void run_tests(struct suite *suite)
         state->function = suite->tests[i];
 
         void (*test)(void) = dlsym(suite->handle, suite->tests[i]);
-        test();
 
         suite->states = realloc(suite->states, (i + 1) * sizeof(struct state *));
         suite->states[i] = malloc(sizeof(struct state));
-        suite->states[i]->index = state->index;
-        suite->states[i]->assertions = state->assertions;
-        suite->states[i]->codes = state->codes;
+        suite->states[i]->index = 0;
+        suite->states[i]->codes = NULL;
+        suite->states[i]->assertions = NULL;
+        suite->states[i]->function = NULL;
+        suite->states[i]->pid = 0;
+        suite->states[i]->stat_loc = 0;
+
+        if (flags.fork_mode) {
+            // Forking mode
+            int msqid = msgget(IPC_PRIVATE, IPC_CREAT | 0600);
+            if (msqid == -1) {
+                perror("msgget");
+
+                exit(EXIT_FAILURE);
+            }
+
+            struct message message;
+
+            state->pid = fork();
+            if (state->pid == 0) {
+                // Child
+                test();
+
+                for (int index = 0; index < state->index; index++) {
+                    memset(&message, 0, sizeof(struct message));
+                    message.type = MSG_MESSAGE;
+                    message.code = state->codes[index];
+                    (void)strcpy(message.assertion, state->assertions[index]);
+                    free(state->assertions[index]);
+
+                    if (msgsnd(msqid, &message,
+                        sizeof(long) +
+                        sizeof(int) +
+                        ((strlen(message.assertion) + 1) * sizeof(char)), 0) == -1) {
+                        perror("msgsnd");
+
+                        exit(EXIT_FAILURE);
+                    }
+                }
+
+                free(state->assertions);
+                free(state->codes);
+
+                memset(&message, 0, sizeof(struct message));
+                message.type = MSG_DONE;
+                if (msgsnd(msqid, &message, sizeof(long), 0) == -1) {
+                    perror("msgsnd");
+
+                    exit(EXIT_FAILURE);
+                }
+
+                exit(EXIT_SUCCESS);
+            } else {
+                // Parent
+                (void)waitpid(state->pid, &(state->stat_loc), 0);
+                suite->states[i]->stat_loc = state->stat_loc;
+
+                // Check if child has failed
+                if (WIFSIGNALED(state->stat_loc)) {
+                    // TODO make allocated memory smaller
+
+                    continue;
+                }
+
+                int done = 0;
+                int index = 0;
+
+                while (!done) {
+                    memset(&message, 0, sizeof(struct message));
+                    if (msgrcv(msqid, &message, sizeof(struct message), 0, 0) == -1) {
+                        perror("msgrcv");
+
+                        exit(EXIT_FAILURE);
+                    }
+
+                    switch (message.type) {
+                        case MSG_MESSAGE:
+                            suite->states[i]->codes = realloc(suite->states[i]->codes, (index + 1) * sizeof(int));
+                            suite->states[i]->codes[index] = message.code;
+
+                            suite->states[i]->assertions = realloc(suite->states[i]->assertions, (index + 1) * sizeof(char *));
+                            alloc_sprintf(&(suite->states[i]->assertions[index]), "%s", message.assertion);
+
+                            index++;
+
+                            break;
+                        case MSG_DONE:
+                            done = 1;
+
+                            break;
+                    }
+                }
+
+                suite->states[i]->index = index;
+
+                if (msgctl(msqid, IPC_RMID, NULL) == -1) {
+                    perror("msgctl");
+
+                    exit(EXIT_FAILURE);
+                }
+            }
+        } else {
+            // Non forking mode
+            test();
+
+            suite->states[i]->index = state->index;
+            suite->states[i]->assertions = state->assertions;
+            suite->states[i]->codes = state->codes;
+        }
     }
 
     suite->states = realloc(suite->states, (i + 1) * sizeof(struct state *));
@@ -296,23 +431,34 @@ struct statistic *build_statistic(struct suite **suites)
 
     for (int suite = 0; suites[suite] != NULL; suite++) {
         for (int state = 0; suites[suite]->states[state] != NULL; state++) {
-            for (int assertion = 0; assertion < suites[suite]->states[state]->index; assertion++) {
-                size_t length = strlen(statistic->symbols);
-                statistic->symbols = realloc(statistic->symbols, (length + 5 + 1 + 1) * sizeof(char));
+            if (flags.fork_mode && WIFSIGNALED(suites[suite]->states[state]->stat_loc)) {
                 statistic->failures = realloc(statistic->failures, (index + 2) * sizeof(char *));
                 statistic->failures[index] = NULL;
                 statistic->failures[index + 1] = NULL;
 
-                if (suites[suite]->states[state]->codes[assertion] == 0) {
-                    sprintf(statistic->symbols + length, "%s.", colors.green);
-                    alloc_sprintf(&(statistic->failures[index]), "");
-                } else {
-                    sprintf(statistic->symbols + length, "%sF", colors.red);
-                    alloc_sprintf(&(statistic->failures[index]), "  - %s.c%s", suites[suite]->name, suites[suite]->states[state]->assertions[assertion]);
-                    statistic->flag = 1;
-                }
+                alloc_sprintf(&(statistic->failures[index]), "  - %s.c: %s", suites[suite]->name, strsignal(WTERMSIG(suites[suite]->states[state]->stat_loc)));
+                statistic->flag = 1;
 
                 index++;
+            } else {
+                for (int assertion = 0; assertion < suites[suite]->states[state]->index; assertion++) {
+                    size_t length = strlen(statistic->symbols);
+                    statistic->symbols = realloc(statistic->symbols, (length + 5 + 1 + 1) * sizeof(char));
+                    statistic->failures = realloc(statistic->failures, (index + 2) * sizeof(char *));
+                    statistic->failures[index] = NULL;
+                    statistic->failures[index + 1] = NULL;
+
+                    if (suites[suite]->states[state]->codes[assertion] == 0) {
+                        sprintf(statistic->symbols + length, "%s.", colors.green);
+                        alloc_sprintf(&(statistic->failures[index]), "");
+                    } else {
+                        sprintf(statistic->symbols + length, "%sF", colors.red);
+                        alloc_sprintf(&(statistic->failures[index]), "  - %s.c%s", suites[suite]->name, suites[suite]->states[state]->assertions[assertion]);
+                        statistic->flag = 1;
+                    }
+
+                    index++;
+                }
             }
         }
     }
@@ -359,6 +505,15 @@ void free_statistic(struct statistic *statistic)
 
 int main(int argc, char **argv)
 {
+    int ch;
+    while ((ch = getopt(argc, argv, "f")) != -1) {
+       switch (ch) {
+           case 'f':
+               flags.fork_mode = 1;
+               break;
+       }
+    }
+
     time_t watch = start_watch();
 
     int exit_code = EXIT_SUCCESS;

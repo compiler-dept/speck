@@ -86,7 +86,7 @@ void sp_assert_lineno(int expr, int lineno)
 void sp_assert_equal_i_lineno(int x, int y, int lineno)
 {
     state.assertions = realloc(state.assertions, (state.index + 1) * sizeof(char *));
-    alloc_sprintf(&(state.assertions[state.index]), ":%d -> %s::sp_assert(%d, %d)", lineno, state.function, x, y);
+    alloc_sprintf(&(state.assertions[state.index]), ":%d -> %s::sp_assert_equal_i(%d, %d)", lineno, state.function, x, y);
 
     state.codes = realloc(state.codes, (state.index + 1) * sizeof(int));
 
