@@ -254,9 +254,9 @@ void run_tests(struct suite *suite)
                     free(state->assertions[index]);
 
                     if (msgsnd(msqid, &message,
-                        sizeof(long) +
-                        sizeof(int) +
-                        ((strlen(message.assertion) + 1) * sizeof(char)), 0) == -1) {
+                               sizeof(long) +
+                               sizeof(int) +
+                               ((strlen(message.assertion) + 1) * sizeof(char)), 0) == -1) {
                         perror("msgsnd");
 
                         exit(EXIT_FAILURE);
@@ -507,11 +507,11 @@ int main(int argc, char **argv)
 {
     int ch;
     while ((ch = getopt(argc, argv, "f")) != -1) {
-       switch (ch) {
-           case 'f':
-               flags.fork_mode = 1;
-               break;
-       }
+        switch (ch) {
+            case 'f':
+                flags.fork_mode = 1;
+                break;
+        }
     }
 
     time_t watch = start_watch();
