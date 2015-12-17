@@ -8,12 +8,12 @@ SPECK_PATH=.
 -include speck.mk
 
 test: $(SPECK) $(SUITES)
-	@$(SPECK)
 	@$(SPECK) -f
+	@$(SPECK)
 
 valgrind: $(SPECK) $(SUITES)
-	@valgrind --leak-check=full --error-exitcode=1 $(SPECK)
 	@valgrind --leak-check=full --error-exitcode=1 $(SPECK) -f
+	@valgrind --leak-check=full --error-exitcode=1 $(SPECK)
 
 style:
 	astyle -A3s4SpHk3jn "*.c" "*.h" "spec/*.c"

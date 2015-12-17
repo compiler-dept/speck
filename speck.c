@@ -226,7 +226,7 @@ void run_tests(struct suite *suite)
         suite->states[i]->index = 0;
         suite->states[i]->codes = NULL;
         suite->states[i]->assertions = NULL;
-        suite->states[i]->function = NULL;
+        suite->states[i]->function = state->function;
         suite->states[i]->pid = 0;
         suite->states[i]->stat_loc = 0;
 
@@ -436,7 +436,7 @@ struct statistic *build_statistic(struct suite **suites)
                 statistic->failures[index] = NULL;
                 statistic->failures[index + 1] = NULL;
 
-                alloc_sprintf(&(statistic->failures[index]), "  - %s.c: %s", suites[suite]->name, strsignal(WTERMSIG(suites[suite]->states[state]->stat_loc)));
+                alloc_sprintf(&(statistic->failures[index]), "  - %s.c::%s() %s", suites[suite]->name, suites[suite]->states[state]->function, strsignal(WTERMSIG(suites[suite]->states[state]->stat_loc)));
                 statistic->flag = 1;
 
                 index++;
