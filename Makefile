@@ -8,10 +8,12 @@ SPECK_PATH=.
 -include speck.mk
 
 test: $(SPECK) $(SUITES)
+	@$(SPECK) -v
 	@$(SPECK) -f
 	@$(SPECK)
 
 valgrind: $(SPECK) $(SUITES)
+	@valgrind --leak-check=full --error-exitcode=1 $(SPECK) -v
 	@valgrind --leak-check=full --error-exitcode=1 $(SPECK) -f
 	@valgrind --leak-check=full --error-exitcode=1 $(SPECK)
 

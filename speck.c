@@ -111,6 +111,15 @@ struct message {
 
 /* Helper functions */
 
+const char *speck_version(void)
+{
+#ifdef SPECK_VERSION
+    return SPECK_VERSION;
+#else
+    return "UNKNOWN";
+#endif
+}
+
 char *string_dup(const char *str)
 {
     size_t len = strlen(str) + 1;
@@ -506,10 +515,14 @@ void free_statistic(struct statistic *statistic)
 int main(int argc, char **argv)
 {
     int ch;
-    while ((ch = getopt(argc, argv, "f")) != -1) {
+    while ((ch = getopt(argc, argv, "fv")) != -1) {
         switch (ch) {
             case 'f':
                 flags.fork_mode = 1;
+                break;
+            case 'v':
+                printf("Speck %s\n", speck_version());
+                return EXIT_SUCCESS;
                 break;
         }
     }
