@@ -204,6 +204,31 @@ If you have finished writing your test suites, you can run `Speck`:
 
     $ make test
 
+## Forking mode
+
+Running the test suites in normal mode is nice and fast, but sometimes you want
+to test something other than simple assertions. In this case it can come to
+lower level errors like segmentation faults. These may be hard to detect,
+because the whole test runner will crash upon a segfault. With the `Forking
+mode`, `Speck` will start every test inside its own forked process. Wenn a test
+provokes a segfault, only its corresponding child process will die. The error
+that caused the crash will then be reported back to the test runner and is
+displayed to the user. To enable the `Forking mode` you have to run `Speck` with
+the commandline option `-f`:
+
+    $ speck -f
+
+You can also change your `Makefile` to run your tests in `Forking mode` whenever
+you type `make test`:
+
+    test: $(SPECK) $(SUITES)
+        @$(SPECK) -f
+
+## Commandline options
+
+- `-f`: Enable forking mode.
+- `-v`: Show version number.
+
 ## A Real-World Example
 
 If you want to see `Speck` in real-life you can checkout our
