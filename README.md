@@ -50,13 +50,13 @@ test suites. Let's call it `test`:
 `speck.mk` also provides you with some variables you can set in your `Makefile`
 to control what is compiled and linked into your test suites:
 
-- `SPECK_CFLAGS`: Additional CFLAGS used for compilation of every test suite
-(e.g. -Werror or -Iinclude).
-- `SPECK_LDFLAGS`: Additional LDFLAGS used for compilation of every test suite
-(e.g. -Llibs).
+- `SPECK_CFLAGS`: Additional `CFLAGS` used for compilation of every test suite
+(e.g. `-Werror` or `-Iinclude`).
+- `SPECK_LDFLAGS`: Additional `LDFLAGS` used for compilation of every test suite
+(e.g. `-Llibs`).
 - `SPECK_LIBS`: Additional files and libraries for linking with every test
-suite. This is where you put the code you want to test (e.g. -lpthread or just
-src/file.c).
+suite. This is where you put the code you want to test (e.g. `-lpthread` or just
+`src/file.c`).
 
 If you want to put `Speck` into a folder other than `speck`, you can do so. But
 you have to set the `SPECK_PATH` variable in your `Makefile` to the location,
@@ -76,7 +76,7 @@ You can install `Speck` with a single command:
 `clib(1)` creates a subfolder in your project directory called `deps`. Every
 dependency installed through `clib` is maintained in that directory.
 
-this way of installation comes with a small adjustment that is needed to be able
+This way of installation comes with a small adjustment that is needed to be able
 to use `Speck`. Because `clib` is installing all dependencies into the `deps`
 directory, the default path for `Speck` has changed. You need to adjust the path
 in your Makefile:
@@ -90,7 +90,7 @@ From here on, you can follow the setup method from the Git variant above.
 
 If you aren't using Git or don't want to use a Git submodule you can follow this
 manual setup. In order to update your copy of `Speck` you have to take care of
-that yourself instead of doing a simple `git submodule update`.
+that yourself, instead of doing a simple `git submodule update`.
 
 To get started, you just have to copy the files `speck.c` and `speck.h` into the
 root folder of your C project. Create a folder called `spec` that will hold your
@@ -114,7 +114,7 @@ to be compiled additionally into the test suites. For this to work you need to
 add another rule to your `Makefile`:
 
     spec/%.so: spec/%.c
-        @$(CC) -Ispeck -fPIC -shared -o $@ $<
+        @$(CC) -g -I. -fPIC -shared -o $@ $<
 
 At the end of the second line you can attach further files (`.c`, `.o`, `.s`) or
 libraries (`-lx`) to pull in all code needed for execution. You can also use all
@@ -139,13 +139,13 @@ For your convenience, all the `Makefile` additions in one place:
     SUITES=$(patsubst %.c, %.so, $(wildcard spec/*.c))
 
     spec/%.so: spec/%.c
-	    @$(CC) -g -fPIC -shared -o $@ $<
+        @$(CC) -g -I. -fPIC -shared -o $@ $<
 
     speck: speck.c
-   	    $(CC) -g -std=c11 -o $@ $< -ldl
+        $(CC) -g -std=c11 -o $@ $< -ldl
 
     test: speck $(SUITES)
-       	@./speck
+        @./speck
 
 ## Writing Tests
 
@@ -210,11 +210,11 @@ Running the test suites in normal mode is nice and fast, but sometimes you want
 to test something other than simple assertions. In this case it can come to
 lower level errors like segmentation faults. These may be hard to detect,
 because the whole test runner will crash upon a segfault. With the `Forking
-mode`, `Speck` will start every test inside its own forked process. Wenn a test
+mode`, `Speck` will start every test inside its own forked process. When a test
 provokes a segfault, only its corresponding child process will die. The error
 that caused the crash will then be reported back to the test runner and is
 displayed to the user. To enable the `Forking mode` you have to run `Speck` with
-the commandline option `-f`:
+the command line option `-f`:
 
     $ speck -f
 
@@ -224,7 +224,7 @@ you type `make test`:
     test: $(SPECK) $(SUITES)
         @$(SPECK) -f
 
-## Commandline options
+## Command line options
 
 - `-f`: Enable forking mode.
 - `-v`: Show version number.
