@@ -197,6 +197,8 @@ There are currently the following assertions implemented:
 false.
 - `sp_assert_equal_i(number_a, number_b)`: Evaluate the equality of both numbers
 and fail if they're different.
+- `sp_assert_equal_s(str_a, str_b)`: Evaluate the equality of both strings using
+`strcmp` and fail if they're different.
 
 ## Running Speck
 
