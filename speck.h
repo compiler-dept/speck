@@ -99,4 +99,22 @@ void sp_assert_equal_i_lineno(int x, int y, int lineno)
     state.index++;
 }
 
+#define sp_assert_equal_s(x, y) sp_assert_equal_s_lineno(x, y, __LINE__)
+
+void sp_assert_equal_s_lineno(char *x, char *y, int lineno)
+{
+    state.assertions = realloc(state.assertions, (state.index + 1) * sizeof(char *));
+    alloc_sprintf(&(state.assertions[state.index]), ":%d -> %s::sp_assert_equal_s(%s, %s)", lineno, state.function, x, y);
+
+    state.codes = realloc(state.codes, (state.index + 1) * sizeof(int));
+
+    if (0 == strcmp(x, y)) {
+        state.codes[state.index] = 0;
+    } else {
+        state.codes[state.index] = 1;
+    }
+
+    state.index++;
+}
+
 #endif
