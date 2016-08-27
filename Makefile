@@ -1,10 +1,10 @@
-BIN=speck
+BIN = speck
 
 .PHONY: all test valgrind clean
 
 all: $(BIN)
 
-SPECK_PATH=.
+SPECK_PATH = .
 -include speck.mk
 
 test: $(SPECK) $(SUITES)
