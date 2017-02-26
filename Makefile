@@ -1,8 +1,7 @@
 BIN = speck
 
-.PHONY: all test valgrind clean
-
-all: $(BIN)
+.PHONY: test valgrind clean
+.DEFAULT_GOAL := $(BIN)
 
 SPECK_PATH = .
 -include speck.mk
