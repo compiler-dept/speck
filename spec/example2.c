@@ -10,3 +10,7 @@ void spec_sample_two(void)
 {
     sp_assert(23);
 }
+
+void spec_sample_three(void) {
+    sp_assert(42);
+}

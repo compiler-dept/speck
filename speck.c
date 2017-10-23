@@ -162,14 +162,17 @@ char *str_match(const char text[], size_t textlen)
         }
 
         int pre_offset = 5; /* "void " */
-        int post_offset = 7; /* "(void)\n" */
 
-        char *match = malloc((textlen - pre_offset - post_offset + 1) * sizeof(char));
+        char *match_end = strstr(text, "(void)");
+        if (match_end) {
+          size_t match_len = match_end - text - pre_offset;
+          char *match = malloc((match_len + 1) * sizeof(char));
 
-        memcpy(match, text + pre_offset, textlen - pre_offset - post_offset);
-        match[textlen - pre_offset - post_offset] = '\0';
+          memcpy(match, text + pre_offset, match_len);
+          match[match_len] = '\0';
 
-        return match;
+          return match;
+        }
     }
 
     return NULL;
