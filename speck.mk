@@ -1,4 +1,4 @@
-SPECK_PATH? = speck
+SPECK_PATH ?= speck
 SPECK = $(SPECK_PATH)/speck
 SUITES = $(patsubst %.c, %.so, $(wildcard spec/*.c))
 SPECK_VERSION = $(shell cd $(SPECK_PATH); git describe --tags --dirty=+ || echo "UNKNOWN")
